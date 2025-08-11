@@ -1,0 +1,40 @@
+# Fichier docker-compose pour le Gestionnaire WiFi
+version: '3.8'
+
+services:
+  wifi-manager:
+    build: .
+    container_name: wifi-manager
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=your-production-secret-key-here
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - wifi-network
+
+  # Optionnel: Nginx comme reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: wifi-manager-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - wifi-manager
+    restart: unless-stopped
+    networks:
+      - wifi-network
+
+networks:
+  wifi-network:
+    driver: bridge
+
+volumes:
+  logs:
