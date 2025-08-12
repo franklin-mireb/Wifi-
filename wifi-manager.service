@@ -1,0 +1,30 @@
+[Unit]
+Description=WiFi Manager Flask Application
+After=network.target
+
+[Service]
+Type=exec
+User=wifimanager
+Group=wifimanager
+WorkingDirectory=/home/wifimanager/Wifi-
+Environment="PATH=/home/wifimanager/Wifi-/venv/bin"
+Environment="FLASK_ENV=production"
+Environment="SECRET_KEY=your-production-secret-key-here"
+ExecStart=/home/wifimanager/Wifi-/venv/bin/gunicorn -c gunicorn.conf.py app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=3
+
+# Sécurité
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/home/wifimanager/Wifi-/logs
+
+# Limites de ressources
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target
