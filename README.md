@@ -132,6 +132,37 @@ Si votre routeur n'est pas automatiquement détecté :
 2. Vérifiez la documentation du routeur pour l'API/interface web
 3. Contactez le support pour ajouter votre modèle
 
+## Déploiement
+
+### 🚀 Hébergement LWS (Recommandé)
+
+Pour déployer sur l'hébergeur français LWS, consultez le guide détaillé :
+📋 **[Guide de Déploiement LWS](DEPLOYMENT_LWS.md)**
+
+**Déploiement rapide :**
+```bash
+# Copier la configuration
+cp .env.example .env
+# Éditer les variables d'environnement
+nano .env
+# Déployer automatiquement
+./deploy-lws.sh
+```
+
+### 🐳 Déploiement Docker
+
+```bash
+docker-compose up -d
+```
+
+### 🌐 Autres Hébergeurs
+
+L'application est compatible avec :
+- **Heroku** - Fichier `Procfile` inclus
+- **DigitalOcean** - Configuration Docker
+- **OVH** - Support WSGI
+- **AWS/Azure** - Containers supportés
+
 ## Développement
 
 ### Ajouter un Nouveau Type de Routeur
