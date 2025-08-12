@@ -137,6 +137,9 @@
                                 <label class="form-label text-white">Adresse IP du Routeur</label>
                                 <input type="text" class="form-control" id="ipAddress" 
                                        placeholder="192.168.1.1" value="192.168.1.1" required>
+                                <small class="text-white-50">
+                                    💡 Astuce: Utilisez 192.168.1.100 pour le mode démo
+                                </small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label text-white">Type de Routeur</label>
@@ -167,6 +170,10 @@
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-link"></i> 
                                 Se connecter
+                            </button>
+                            <button type="button" class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#helpModal">
+                                <i class="fas fa-question-circle"></i> 
+                                Aide
                             </button>
                         </div>
                     </form>
@@ -227,6 +234,86 @@
                         <span class="visually-hidden">Chargement...</span>
                     </div>
                     <h5 id="loadingText">Connexion en cours...</h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-question-circle text-primary"></i>
+                        Aide - Gestionnaire WiFi
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-router text-primary"></i> Connexion au Routeur</h6>
+                            <ul class="list-unstyled ms-3">
+                                <li><strong>Adresse IP :</strong> Généralement 192.168.1.1 ou 192.168.0.1</li>
+                                <li><strong>Identifiants :</strong> Souvent "admin/admin" ou "admin/password"</li>
+                                <li><strong>Port :</strong> L'interface web est généralement sur le port 80</li>
+                            </ul>
+                            
+                            <h6><i class="fas fa-exclamation-triangle text-warning"></i> Dépannage</h6>
+                            <ul class="list-unstyled ms-3">
+                                <li>• Vérifiez que vous êtes connecté au même réseau</li>
+                                <li>• Testez la connectivité avec un ping</li>
+                                <li>• Vérifiez que l'interface web est activée</li>
+                                <li>• Essayez depuis un navigateur web d'abord</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-flask text-success"></i> Mode Démo</h6>
+                            <p>Pour tester l'application sans routeur réel :</p>
+                            <div class="alert alert-info">
+                                <strong>IP de test :</strong> 192.168.1.100<br>
+                                <strong>Utilisateur :</strong> demo<br>
+                                <strong>Mot de passe :</strong> demo
+                            </div>
+                            
+                            <h6><i class="fas fa-shield-alt text-danger"></i> Sécurité</h6>
+                            <ul class="list-unstyled ms-3">
+                                <li>• N'utilisez jamais sur des réseaux non sécurisés</li>
+                                <li>• Changez les mots de passe par défaut</li>
+                                <li>• Surveillez les connexions suspectes</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    <h6><i class="fas fa-cogs text-secondary"></i> Routeurs Supportés</h6>
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-wifi fa-2x text-primary mb-2"></i><br>
+                            <strong>TP-Link</strong><br>
+                            <small class="text-muted">Archer, TL-WR...</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-wifi fa-2x text-success mb-2"></i><br>
+                            <strong>Netgear</strong><br>
+                            <small class="text-muted">Nighthawk, R6000...</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-wifi fa-2x text-warning mb-2"></i><br>
+                            <strong>Linksys</strong><br>
+                            <small class="text-muted">EA, WRT...</small>
+                        </div>
+                        <div class="col-md-3 text-center">
+                            <i class="fas fa-wifi fa-2x text-danger mb-2"></i><br>
+                            <strong>ASUS</strong><br>
+                            <small class="text-muted">RT-AC, RT-AX...</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    <button type="button" class="btn btn-primary" onclick="useDemoMode()">Utiliser le Mode Démo</button>
                 </div>
             </div>
         </div>
@@ -294,7 +381,15 @@
                 },
                 body: JSON.stringify(formData)
             })
-            .then(response => response.json())
+            .then(response => {
+                // Vérifier si la réponse est JSON valide
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    throw new Error('Réponse non-JSON reçue du serveur');
+                }
+            })
             .then(data => {
                 loadingModal.hide();
                 
@@ -314,6 +409,7 @@
             })
             .catch(error => {
                 loadingModal.hide();
+                console.error('Erreur de connexion:', error);
                 showAlert('Erreur de connexion: ' + error.message, 'error');
             });
         }
@@ -323,7 +419,14 @@
             loadingModal.show();
             
             fetch('/users')
-            .then(response => response.json())
+            .then(response => {
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    return response.json();
+                } else {
+                    throw new Error('Réponse non-JSON reçue du serveur');
+                }
+            })
             .then(data => {
                 loadingModal.hide();
                 
@@ -335,6 +438,7 @@
             })
             .catch(error => {
                 loadingModal.hide();
+                console.error('Erreur lors du chargement:', error);
                 showAlert('Erreur lors du chargement: ' + error.message, 'error');
             });
         }
@@ -462,6 +566,21 @@
             .catch(error => {
                 showAlert('Erreur: ' + error.message, 'error');
             });
+        }
+        
+        function useDemoMode() {
+            // Fermer le modal d'aide
+            const helpModal = bootstrap.Modal.getInstance(document.getElementById('helpModal'));
+            helpModal.hide();
+            
+            // Remplir le formulaire avec les données de démo
+            document.getElementById('ipAddress').value = '192.168.1.100';
+            document.getElementById('username').value = 'demo';
+            document.getElementById('password').value = 'demo';
+            document.getElementById('routerType').value = '';
+            
+            // Afficher un message informatif
+            showAlert('Mode démo activé ! Cliquez sur "Se connecter" pour tester l\'application.', 'info');
         }
     </script>
 </body>
