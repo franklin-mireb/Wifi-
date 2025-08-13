@@ -4,9 +4,17 @@ import base64
 import json
 from datetime import datetime
 import re
+import os
+from security import SecurityLogger, RouterSecurity, RateLimiter
+from voucher_system import VoucherManager, PaymentSimulator
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-this'
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
+
+# Initialiser les composants de sécurité et vouchers
+security_logger = SecurityLogger()
+rate_limiter = RateLimiter()
+voucher_manager = VoucherManager()
 
 class RouterManager:
     def __init__(self):
@@ -152,18 +160,33 @@ def index():
 @app.route('/connect', methods=['POST'])
 def connect_router():
     data = request.get_json()
-    ip_address = data.get('ip_address')
-    username = data.get('username')
-    password = data.get('password')
-    router_type = data.get('router_type')
+    ip_address = data.get('ip_address', '').strip()
+    username = data.get('username', '').strip()
+    password = data.get('password', '')
+    router_type = data.get('router_type', '')
+    
+    # Obtenir l'IP du client pour le rate limiting
+    client_ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.environ.get('REMOTE_ADDR', ''))
+    
+    # Vérifier le rate limiting
+    if rate_limiter.is_rate_limited(client_ip):
+        security_logger.log_error(f"Rate limit exceeded for IP {client_ip}")
+        return jsonify({'success': False, 'message': 'Trop de tentatives. Veuillez réessayer plus tard.'})
+    
+    # Enregistrer la tentative
+    rate_limiter.record_attempt(client_ip)
     
     if not all([ip_address, username, password]):
         return jsonify({'success': False, 'message': 'Tous les champs sont requis'})
     
-    # Validation de l'adresse IP
-    ip_pattern = re.compile(r'^(\d{1,3}\.){3}\d{1,3}$')
-    if not ip_pattern.match(ip_address):
+    # Validation de l'adresse IP avec sécurité renforcée
+    if not RouterSecurity.validate_ip_address(ip_address):
+        security_logger.log_error(f"Invalid IP address attempted: {ip_address}")
         return jsonify({'success': False, 'message': 'Adresse IP invalide'})
+    
+    # Nettoyer les entrées utilisateur
+    username = RouterSecurity.sanitize_input(username)
+    ip_address = RouterSecurity.sanitize_input(ip_address)
     
     # Mode démo/test pour des IPs spéciales
     if ip_address in ['192.168.1.100', '10.0.0.100', '172.16.0.100']:
@@ -175,10 +198,14 @@ def connect_router():
             'type': router_type or 'demo',
             'demo_mode': True
         }
+        security_logger.log_connection_attempt(ip_address, username, True)
         return jsonify({'success': True, 'message': f'Connexion réussie en mode démo ({ip_address})'})
     
     # Authentification normale
     success, message = router_manager.authenticate(ip_address, username, password, router_type)
+    
+    # Logger la tentative de connexion
+    security_logger.log_connection_attempt(ip_address, username, success)
     
     if success:
         # Sauvegarder les informations de connexion en session
@@ -210,11 +237,16 @@ def get_users():
 @app.route('/block_user', methods=['POST'])
 def block_user():
     data = request.get_json()
-    mac_address = data.get('mac_address')
+    mac_address = data.get('mac_address', '').strip()
     
     router_info = app.config.get('ROUTER_INFO')
     if not router_info:
         return jsonify({'success': False, 'message': 'Non connecté au routeur'})
+    
+    # Validation de l'adresse MAC
+    if not RouterSecurity.validate_mac_address(mac_address):
+        security_logger.log_error(f"Invalid MAC address attempted: {mac_address}")
+        return jsonify({'success': False, 'message': 'Adresse MAC invalide'})
     
     success, message = router_manager.block_user(
         router_info['ip'],
@@ -224,16 +256,24 @@ def block_user():
         router_info['type']
     )
     
+    # Logger l'action
+    security_logger.log_user_action(f"BLOCK_{('SUCCESS' if success else 'FAILED')}", mac_address, router_info['ip'])
+    
     return jsonify({'success': success, 'message': message})
 
 @app.route('/unblock_user', methods=['POST'])
 def unblock_user():
     data = request.get_json()
-    mac_address = data.get('mac_address')
+    mac_address = data.get('mac_address', '').strip()
     
     router_info = app.config.get('ROUTER_INFO')
     if not router_info:
         return jsonify({'success': False, 'message': 'Non connecté au routeur'})
+    
+    # Validation de l'adresse MAC
+    if not RouterSecurity.validate_mac_address(mac_address):
+        security_logger.log_error(f"Invalid MAC address attempted: {mac_address}")
+        return jsonify({'success': False, 'message': 'Adresse MAC invalide'})
     
     success, message = router_manager.unblock_user(
         router_info['ip'],
@@ -243,12 +283,196 @@ def unblock_user():
         router_info['type']
     )
     
+    # Logger l'action
+    security_logger.log_user_action(f"UNBLOCK_{('SUCCESS' if success else 'FAILED')}", mac_address, router_info['ip'])
+    
     return jsonify({'success': success, 'message': message})
 
 @app.route('/disconnect')
 def disconnect():
     app.config.pop('ROUTER_INFO', None)
     return jsonify({'success': True, 'message': 'Déconnecté du routeur'})
+
+# ========== SYSTÈME DE VOUCHERS ==========
+
+@app.route('/vouchers')
+def vouchers_page():
+    """Page de gestion des vouchers"""
+    return render_template('vouchers.html')
+
+@app.route('/api/voucher/plans', methods=['GET'])
+def get_voucher_plans():
+    """Récupère les plans de tarification"""
+    plans = []
+    for plan in voucher_manager.plans.values():
+        plans.append({
+            'id': plan.id,
+            'name': plan.name,
+            'duration_days': plan.duration_days,
+            'price_usd': plan.price_usd,
+            'description': plan.description,
+            'features': plan.features
+        })
+    
+    return jsonify({'success': True, 'plans': plans})
+
+@app.route('/api/voucher/create', methods=['POST'])
+def create_voucher():
+    """Crée un nouveau voucher après paiement"""
+    data = request.get_json()
+    plan_id = data.get('plan_id')
+    
+    if not plan_id or plan_id not in voucher_manager.plans:
+        return jsonify({'success': False, 'message': 'Plan invalide'})
+    
+    plan = voucher_manager.plans[plan_id]
+    
+    # Simuler le paiement
+    payment_success, payment_message, payment_ref = PaymentSimulator.simulate_payment(
+        plan_id, plan.price_usd
+    )
+    
+    if not payment_success:
+        security_logger.log_error(f"Payment failed for plan {plan_id}: {payment_message}")
+        return jsonify({'success': False, 'message': payment_message})
+    
+    try:
+        # Créer le voucher
+        voucher = voucher_manager.create_voucher(plan_id, payment_ref)
+        
+        # Logger la création
+        security_logger.log_user_action(
+            f"VOUCHER_CREATED", 
+            voucher.code, 
+            f"Plan: {plan_id}, Price: ${plan.price_usd}"
+        )
+        
+        return jsonify({
+            'success': True,
+            'message': 'Voucher créé avec succès',
+            'voucher': {
+                'code': voucher.code,
+                'plan_name': plan.name,
+                'expires_at': voucher.expires_at.strftime('%d/%m/%Y à %H:%M'),
+                'payment_reference': payment_ref
+            }
+        })
+        
+    except Exception as e:
+        security_logger.log_error(f"Error creating voucher: {str(e)}")
+        return jsonify({'success': False, 'message': 'Erreur lors de la création du voucher'})
+
+@app.route('/api/voucher/validate', methods=['POST'])
+def validate_voucher():
+    """Valide un code voucher"""
+    data = request.get_json()
+    code = data.get('code', '').strip().upper()
+    
+    if not code:
+        return jsonify({'success': False, 'message': 'Code voucher requis'})
+    
+    # Validation du code
+    is_valid, message, voucher = voucher_manager.validate_voucher(code)
+    
+    result = {
+        'success': is_valid,
+        'message': message
+    }
+    
+    if voucher:
+        plan = voucher_manager.plans[voucher.plan_id]
+        result['voucher_info'] = {
+            'code': voucher.code,
+            'plan_name': plan.name,
+            'duration_days': plan.duration_days,
+            'created_at': voucher.created_at.strftime('%d/%m/%Y à %H:%M'),
+            'expires_at': voucher.expires_at.strftime('%d/%m/%Y à %H:%M'),
+            'is_used': voucher.is_used,
+            'used_at': voucher.used_at.strftime('%d/%m/%Y à %H:%M') if voucher.used_at else None
+        }
+    
+    # Logger la validation
+    security_logger.log_user_action(
+        f"VOUCHER_VALIDATE_{'SUCCESS' if is_valid else 'FAILED'}", 
+        code, 
+        message
+    )
+    
+    return jsonify(result)
+
+@app.route('/api/voucher/activate', methods=['POST'])
+def activate_voucher():
+    """Active un voucher pour un utilisateur"""
+    data = request.get_json()
+    code = data.get('code', '').strip().upper()
+    user_mac = data.get('user_mac', '').strip()
+    user_device = data.get('user_device', '').strip()
+    
+    if not code or not user_mac:
+        return jsonify({'success': False, 'message': 'Code voucher et adresse MAC requis'})
+    
+    # Validation de l'adresse MAC
+    if not RouterSecurity.validate_mac_address(user_mac):
+        return jsonify({'success': False, 'message': 'Adresse MAC invalide'})
+    
+    # Activer le voucher
+    success, message = voucher_manager.use_voucher(code, user_mac, user_device)
+    
+    if success:
+        # Dans une vraie implémentation, ici on débloquerait l'utilisateur sur le routeur
+        router_info = app.config.get('ROUTER_INFO')
+        if router_info:
+            # Débloquer automatiquement l'utilisateur
+            router_manager.unblock_user(
+                router_info['ip'],
+                router_info['username'],
+                router_info['password'],
+                user_mac,
+                router_info['type']
+            )
+    
+    # Logger l'activation
+    security_logger.log_user_action(
+        f"VOUCHER_ACTIVATE_{'SUCCESS' if success else 'FAILED'}", 
+        f"{code}:{user_mac}", 
+        message
+    )
+    
+    return jsonify({'success': success, 'message': message})
+
+@app.route('/api/voucher/stats', methods=['GET'])
+def get_voucher_stats():
+    """Récupère les statistiques des vouchers"""
+    stats = voucher_manager.get_stats()
+    return jsonify({'success': True, 'stats': stats})
+
+@app.route('/api/voucher/list', methods=['GET'])
+def list_vouchers():
+    """Liste tous les vouchers (pour admin)"""
+    # Cette route pourrait nécessiter une authentification admin
+    vouchers = voucher_manager.get_all_vouchers()
+    
+    # Formater les données pour l'affichage
+    formatted_vouchers = []
+    for voucher_info in vouchers:
+        voucher = voucher_info['voucher']
+        plan = voucher_info['plan']
+        
+        formatted_vouchers.append({
+            'code': voucher.code,
+            'plan_name': plan.name,
+            'price': plan.price_usd,
+            'created_at': voucher.created_at.strftime('%d/%m/%Y %H:%M'),
+            'expires_at': voucher.expires_at.strftime('%d/%m/%Y %H:%M'),
+            'is_used': voucher.is_used,
+            'used_at': voucher.used_at.strftime('%d/%m/%Y %H:%M') if voucher.used_at else None,
+            'user_mac': voucher.user_mac,
+            'user_device': voucher.user_device,
+            'is_valid': voucher_info['is_valid'],
+            'payment_reference': voucher.payment_reference
+        })
+    
+    return jsonify({'success': True, 'vouchers': formatted_vouchers})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

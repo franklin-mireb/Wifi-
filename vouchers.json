@@ -1,0 +1,13 @@
+{
+  "ET5W-HAPJ-5M3D": {
+    "code": "ET5W-HAPJ-5M3D",
+    "plan_id": "monthly",
+    "created_at": "2025-08-13T17:00:18.394841",
+    "expires_at": "2025-09-12T17:00:18.394841",
+    "is_used": false,
+    "used_at": null,
+    "user_mac": null,
+    "user_device": null,
+    "payment_reference": "PAY_20250813_170018_FE0E25ED"
+  }
+}

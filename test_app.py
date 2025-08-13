@@ -23,6 +23,7 @@ class TestRouterManager(unittest.TestCase):
     def test_detect_router_type_tplink(self, mock_get):
         """Test de détection TP-Link"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.text = "TP-Link Router Configuration"
         mock_get.return_value = mock_response
         
@@ -33,6 +34,7 @@ class TestRouterManager(unittest.TestCase):
     def test_detect_router_type_netgear(self, mock_get):
         """Test de détection Netgear"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.text = "NETGEAR Router Setup"
         mock_get.return_value = mock_response
         
@@ -43,6 +45,7 @@ class TestRouterManager(unittest.TestCase):
     def test_detect_router_type_unknown(self, mock_get):
         """Test de détection routeur inconnu"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.text = "Unknown Router Brand"
         mock_get.return_value = mock_response
         

@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  wifi-manager:
+    build: .
+    container_name: wifi-manager-lws
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-changez-cette-cle-secrete-en-production}
+    volumes:
+      - ./logs:/app/logs
+    ports:
+      - "5000:5000"
+    networks:
+      - wifi-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: wifi-nginx-lws
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.lws.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./logs:/var/log/nginx
+    depends_on:
+      - wifi-manager
+    restart: unless-stopped
+    networks:
+      - wifi-network
+
+networks:
+  wifi-network:
+    driver: bridge
+
+volumes:
+  logs:

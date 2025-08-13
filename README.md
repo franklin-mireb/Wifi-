@@ -1,6 +1,16 @@
-# Gestionnaire WiFi - Application de Gestion des Utilisateurs
+# 🌐 Gestionnaire WiFi - Contrôle des Utilisateurs Réseau
 
-Une application web simple pour gérer les utilisateurs WiFi connectés à différents types de routeurs.
+## 🚀 **DÉPLOIEMENT EN 1 CLIC !**
+
+```bash
+./deploy-facile.sh
+```
+
+**C'est tout !** Choisissez votre option et c'est parti ! ✨
+
+---
+
+Une application web moderne pour gérer et contrôler les utilisateurs connectés à votre réseau WiFi via l'interface d'administration de votre routeur.
 
 ## Fonctionnalités
 

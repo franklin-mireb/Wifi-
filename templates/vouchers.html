@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Système de Vouchers WiFi - Achat et Gestion</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .main-container {
+            padding: 20px 0;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            background: rgba(255,255,255,0.95);
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            border: none;
+        }
+        
+        .plan-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .plan-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            border-color: #667eea;
+        }
+        
+        .plan-price {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin: 15px 0;
+        }
+        
+        .plan-duration {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 25px;
+            padding: 12px 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .voucher-code {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 2px dashed #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .voucher-info {
+            background: rgba(40, 167, 69, 0.1);
+            border: 2px solid rgba(40, 167, 69, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        .stats-card {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 10px 0;
+        }
+        
+        .stats-number {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .form-control {
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.9);
+            padding: 12px 20px;
+        }
+        
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .nav-tabs .nav-link {
+            border-radius: 25px 25px 0 0;
+            border: none;
+            background: rgba(255,255,255,0.7);
+            margin-right: 5px;
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 5px 0;
+            color: #666;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container main-container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="text-center mb-4">
+                    <h1 class="text-white">
+                        <i class="fas fa-ticket-alt"></i> 
+                        Système de Vouchers WiFi
+                    </h1>
+                    <p class="text-white-50">Achetez des tickets d'accès WiFi en ligne</p>
+                </div>
+
+                <!-- Navigation par onglets -->
+                <ul class="nav nav-tabs mb-4" id="voucherTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="buy-tab" data-bs-toggle="tab" data-bs-target="#buy" type="button" role="tab">
+                            <i class="fas fa-shopping-cart"></i> Acheter des Tickets
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="validate-tab" data-bs-toggle="tab" data-bs-target="#validate" type="button" role="tab">
+                            <i class="fas fa-check-circle"></i> Valider un Ticket
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="activate-tab" data-bs-toggle="tab" data-bs-target="#activate" type="button" role="tab">
+                            <i class="fas fa-wifi"></i> Activer l'Accès
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab">
+                            <i class="fas fa-chart-bar"></i> Statistiques
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="voucherTabContent">
+                    <!-- Onglet Achat -->
+                    <div class="tab-pane fade show active" id="buy" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-shopping-cart"></i> 
+                                    Choisissez votre Plan d'Accès
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="plansContainer" class="row">
+                                    <!-- Les plans seront chargés ici -->
+                                </div>
+                                
+                                <!-- Résultat d'achat -->
+                                <div id="purchaseResult" style="display: none;">
+                                    <div class="voucher-info">
+                                        <h5 class="text-success">
+                                            <i class="fas fa-check-circle"></i> 
+                                            Achat Réussi !
+                                        </h5>
+                                        <div id="voucherDetails"></div>
+                                        <div class="voucher-code" id="voucherCode"></div>
+                                        <p class="mb-0">
+                                            <i class="fas fa-info-circle text-info"></i>
+                                            Conservez précieusement ce code pour activer votre accès WiFi.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Onglet Validation -->
+                    <div class="tab-pane fade" id="validate" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-check-circle"></i> 
+                                    Valider un Code Voucher
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <form id="validateForm">
+                                    <div class="mb-3">
+                                        <label class="form-label">Code Voucher</label>
+                                        <input type="text" class="form-control" id="validateCode" 
+                                               placeholder="XXXX-XXXX-XXXX" required>
+                                        <small class="text-muted">
+                                            Entrez le code à 12 caractères avec ou sans tirets
+                                        </small>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-search"></i> 
+                                        Valider le Code
+                                    </button>
+                                </form>
+                                
+                                <div id="validateResult" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Onglet Activation -->
+                    <div class="tab-pane fade" id="activate" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-wifi"></i> 
+                                    Activer l'Accès WiFi
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <form id="activateForm">
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Code Voucher</label>
+                                            <input type="text" class="form-control" id="activateCode" 
+                                                   placeholder="XXXX-XXXX-XXXX" required>
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Adresse MAC de votre Appareil</label>
+                                            <input type="text" class="form-control" id="deviceMac" 
+                                                   placeholder="XX:XX:XX:XX:XX:XX" required>
+                                            <small class="text-muted">
+                                                Trouvez-la dans les paramètres WiFi de votre appareil
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Nom de l'Appareil (optionnel)</label>
+                                        <input type="text" class="form-control" id="deviceName" 
+                                               placeholder="Mon iPhone, PC Portable, etc.">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-key"></i> 
+                                        Activer l'Accès
+                                    </button>
+                                </form>
+                                
+                                <div id="activateResult" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Onglet Statistiques -->
+                    <div class="tab-pane fade" id="stats" role="tabpanel">
+                        <div class="card">
+                            <div class="card-header">
+                                <h4 class="mb-0">
+                                    <i class="fas fa-chart-bar"></i> 
+                                    Statistiques des Vouchers
+                                </h4>
+                            </div>
+                            <div class="card-body">
+                                <div id="statsContainer" class="row">
+                                    <!-- Les statistiques seront chargées ici -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Zone d'alerte -->
+                <div id="alertZone" class="mt-3"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back to WiFi Manager -->
+    <div class="position-fixed bottom-0 end-0 p-3">
+        <a href="/" class="btn btn-outline-light">
+            <i class="fas fa-arrow-left"></i> 
+            Retour au Gestionnaire WiFi
+        </a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPlans();
+            loadStats();
+            
+            // Gestionnaires d'événements
+            document.getElementById('validateForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                validateVoucher();
+            });
+            
+            document.getElementById('activateForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                activateVoucher();
+            });
+            
+            // Recharger les stats quand on change d'onglet
+            document.getElementById('stats-tab').addEventListener('shown.bs.tab', function() {
+                loadStats();
+            });
+        });
+        
+        function showAlert(message, type = 'info') {
+            const alertZone = document.getElementById('alertZone');
+            const alertClass = type === 'error' ? 'alert-danger' : type === 'success' ? 'alert-success' : 'alert-info';
+            
+            alertZone.innerHTML = `
+                <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                    <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : type === 'success' ? 'check-circle' : 'info-circle'}"></i>
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            setTimeout(() => {
+                const alert = alertZone.querySelector('.alert');
+                if (alert) alert.remove();
+            }, 5000);
+        }
+        
+        function loadPlans() {
+            fetch('/api/voucher/plans')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayPlans(data.plans);
+                } else {
+                    showAlert('Erreur lors du chargement des plans', 'error');
+                }
+            })
+            .catch(error => {
+                showAlert('Erreur de connexion: ' + error.message, 'error');
+            });
+        }
+        
+        function displayPlans(plans) {
+            const container = document.getElementById('plansContainer');
+            
+            container.innerHTML = plans.map(plan => `
+                <div class="col-md-6">
+                    <div class="plan-card">
+                        <h5>${plan.name}</h5>
+                        <div class="plan-duration">${plan.duration_days} jour${plan.duration_days > 1 ? 's' : ''}</div>
+                        <div class="plan-price">$${plan.price_usd}</div>
+                        <p class="text-muted">${plan.description}</p>
+                        <ul class="feature-list mb-4">
+                            ${plan.features.map(feature => `<li>${feature}</li>`).join('')}
+                        </ul>
+                        <button onclick="purchaseVoucher('${plan.id}')" class="btn btn-primary">
+                            <i class="fas fa-shopping-cart"></i> 
+                            Acheter Maintenant
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function purchaseVoucher(planId) {
+            showAlert('Traitement du paiement...', 'info');
+            
+            fetch('/api/voucher/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ plan_id: planId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showPurchaseResult(data.voucher);
+                    showAlert('Voucher créé avec succès !', 'success');
+                } else {
+                    showAlert(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showAlert('Erreur: ' + error.message, 'error');
+            });
+        }
+        
+        function showPurchaseResult(voucher) {
+            document.getElementById('voucherCode').textContent = voucher.code;
+            document.getElementById('voucherDetails').innerHTML = `
+                <p><strong>Plan:</strong> ${voucher.plan_name}</p>
+                <p><strong>Expire le:</strong> ${voucher.expires_at}</p>
+                <p><strong>Référence:</strong> ${voucher.payment_reference}</p>
+            `;
+            document.getElementById('purchaseResult').style.display = 'block';
+            
+            // Faire défiler vers le résultat
+            document.getElementById('purchaseResult').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function validateVoucher() {
+            const code = document.getElementById('validateCode').value.trim();
+            
+            if (!code) {
+                showAlert('Veuillez entrer un code voucher', 'error');
+                return;
+            }
+            
+            fetch('/api/voucher/validate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: code })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showValidateResult(data);
+            })
+            .catch(error => {
+                showAlert('Erreur: ' + error.message, 'error');
+            });
+        }
+        
+        function showValidateResult(data) {
+            const resultDiv = document.getElementById('validateResult');
+            const alertClass = data.success ? 'alert-success' : 'alert-danger';
+            const icon = data.success ? 'check-circle' : 'exclamation-triangle';
+            
+            let content = `
+                <div class="alert ${alertClass} mt-3">
+                    <i class="fas fa-${icon}"></i> ${data.message}
+                </div>
+            `;
+            
+            if (data.voucher_info) {
+                const info = data.voucher_info;
+                content += `
+                    <div class="voucher-info mt-3">
+                        <h6>Informations du Voucher:</h6>
+                        <p><strong>Code:</strong> ${info.code}</p>
+                        <p><strong>Plan:</strong> ${info.plan_name}</p>
+                        <p><strong>Durée:</strong> ${info.duration_days} jour(s)</p>
+                        <p><strong>Créé le:</strong> ${info.created_at}</p>
+                        <p><strong>Expire le:</strong> ${info.expires_at}</p>
+                        <p><strong>Statut:</strong> ${info.is_used ? 'Utilisé le ' + info.used_at : 'Non utilisé'}</p>
+                    </div>
+                `;
+            }
+            
+            resultDiv.innerHTML = content;
+            resultDiv.style.display = 'block';
+        }
+        
+        function activateVoucher() {
+            const code = document.getElementById('activateCode').value.trim();
+            const mac = document.getElementById('deviceMac').value.trim();
+            const device = document.getElementById('deviceName').value.trim();
+            
+            if (!code || !mac) {
+                showAlert('Code voucher et adresse MAC requis', 'error');
+                return;
+            }
+            
+            fetch('/api/voucher/activate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    code: code, 
+                    user_mac: mac, 
+                    user_device: device 
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultDiv = document.getElementById('activateResult');
+                const alertClass = data.success ? 'alert-success' : 'alert-danger';
+                const icon = data.success ? 'check-circle' : 'exclamation-triangle';
+                
+                resultDiv.innerHTML = `
+                    <div class="alert ${alertClass} mt-3">
+                        <i class="fas fa-${icon}"></i> ${data.message}
+                    </div>
+                `;
+                resultDiv.style.display = 'block';
+                
+                if (data.success) {
+                    showAlert('Accès WiFi activé avec succès !', 'success');
+                    // Réinitialiser le formulaire
+                    document.getElementById('activateForm').reset();
+                }
+            })
+            .catch(error => {
+                showAlert('Erreur: ' + error.message, 'error');
+            });
+        }
+        
+        function loadStats() {
+            fetch('/api/voucher/stats')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    displayStats(data.stats);
+                }
+            })
+            .catch(error => {
+                console.error('Erreur lors du chargement des statistiques:', error);
+            });
+        }
+        
+        function displayStats(stats) {
+            const container = document.getElementById('statsContainer');
+            
+            container.innerHTML = `
+                <div class="col-md-3">
+                    <div class="stats-card">
+                        <div class="stats-number">${stats.total_vouchers}</div>
+                        <div>Total Vouchers</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card bg-success">
+                        <div class="stats-number">${stats.used_vouchers}</div>
+                        <div>Utilisés</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card bg-warning">
+                        <div class="stats-number">${stats.active_vouchers}</div>
+                        <div>Actifs</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stats-card bg-info">
+                        <div class="stats-number">$${stats.revenue_total.toFixed(2)}</div>
+                        <div>Revenus Total</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stats-card bg-primary">
+                        <div class="stats-number">$${stats.revenue_monthly.toFixed(2)}</div>
+                        <div>Revenus Plans Mensuels</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="stats-card bg-secondary">
+                        <div class="stats-number">$${stats.revenue_daily.toFixed(2)}</div>
+                        <div>Revenus Plans Journaliers</div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "name": "wifi-manager",
+  "version": "1.0.0",
+  "description": "WiFi Manager avec système de vouchers - Gestionnaire professionnel pour réseaux WiFi",
+  "main": "app.py",
+  "scripts": {
+    "start": "python run.py",
+    "dev": "python run.py --env development",
+    "test": "python -m pytest",
+    "build": "docker build -t wifi-manager .",
+    "deploy": "docker-compose -f docker-compose.prod.yml up -d"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/franklin-mireb/Wifi-.git"
+  },
+  "keywords": [
+    "wifi",
+    "manager",
+    "voucher",
+    "hotspot",
+    "network",
+    "flask",
+    "python",
+    "docker"
+  ],
+  "author": "franklin-mireb",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/franklin-mireb/Wifi-/issues"
+  },
+  "homepage": "https://github.com/franklin-mireb/Wifi-#readme",
+  "engines": {
+    "python": ">=3.12.0"
+  },
+  "dependencies": {
+    "python": "^3.12.0",
+    "flask": "^2.3.3",
+    "requests": "^2.31.0",
+    "python-dotenv": "^1.0.0"
+  },
+  "devDependencies": {
+    "pytest": "^7.4.0"
+  },
+  "config": {
+    "port": "5000",
+    "host": "0.0.0.0"
+  }
+}
