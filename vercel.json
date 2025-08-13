@@ -3,23 +3,29 @@
   "name": "wifi-manager",
   "builds": [
     {
-      "src": "app.py",
-      "use": "@vercel/python"
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "maxLambdaSize": "15mb"
+      }
     }
   ],
   "routes": [
     {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
       "src": "/(.*)",
-      "dest": "app.py"
+      "dest": "api/index.py"
     }
   ],
   "env": {
     "FLASK_ENV": "production",
-    "PYTHONPATH": "/var/task"
-  },
-  "functions": {
-    "app.py": {
-      "runtime": "python3.12"
-    }
+    "PYTHONPATH": "/var/task",
+    "SECRET_KEY": "@secret_key",
+    "ROUTER_IP": "@router_ip",
+    "ROUTER_USER": "@router_user",
+    "ROUTER_PASS": "@router_pass"
   }
 }
