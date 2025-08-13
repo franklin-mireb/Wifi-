@@ -1,0 +1,81 @@
+# 🌐 WordPress + WiFi Manager - Configuration Locale
+version: '3.8'
+
+services:
+  # 🎯 WiFi Manager (déjà en cours)
+  wifi-manager:
+    build: .
+    container_name: wifi-manager-local
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./logs:/app/logs
+      - ./vouchers.json:/app/vouchers.json
+    environment:
+      - FLASK_ENV=development
+      - SECRET_KEY=dev-secret-key-local
+      - ROUTER_IP=192.168.1.1
+      - ROUTER_USER=admin
+      - ROUTER_PASS=admin
+    networks:
+      - wordpress-network
+
+  # 🗄️ Base de données WordPress
+  wordpress-db:
+    image: mysql:8.0
+    container_name: wordpress-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress_password
+      MYSQL_ROOT_PASSWORD: root_password
+    volumes:
+      - wordpress_db:/var/lib/mysql
+    networks:
+      - wordpress-network
+
+  # 🌐 WordPress
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress-site
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: wordpress-db:3306
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress_password
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wordpress_files:/var/www/html
+      - ./wordpress-config:/var/www/html/wp-content/themes/custom
+    depends_on:
+      - wordpress-db
+    networks:
+      - wordpress-network
+
+  # 🌐 Proxy Nginx
+  nginx-proxy:
+    image: nginx:alpine
+    container_name: nginx-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-local.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - wordpress
+      - wifi-manager
+    networks:
+      - wordpress-network
+
+volumes:
+  wordpress_db:
+  wordpress_files:
+
+networks:
+  wordpress-network:
+    driver: bridge
