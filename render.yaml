@@ -1,8 +1,7 @@
-# 🚀 Configuration Render pour WiFi Manager
+# 🚀 Configuration Render pour WiFi Manager KUWFI
 services:
-  # 🐍 Application principale WiFi Manager
   - type: web
-    name: wifi-manager
+    name: wifi-manager-kuwfi
     env: python
     plan: free
     region: oregon
@@ -14,12 +13,20 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ROUTER_IP
-        value: 192.168.1.1
+        value: 192.168.1.254
       - key: ROUTER_USER
         value: admin
       - key: ROUTER_PASS
-        value: changeme
-      - key: PAYMENT_MODE
-        value: demo
+        value: admin
+      - key: WIFI_SSID
+        value: mireb wifi
+      - key: WIFI_PASSWORD
+        value: 0816448961
+      - key: NETWORK_SUBNET
+        value: 192.168.1.0/24
+      - key: GATEWAY
+        value: 192.168.1.254
+      - key: DNS_SERVER
+        value: 192.168.1.254
       - key: PYTHON_VERSION
         value: 3.12.0

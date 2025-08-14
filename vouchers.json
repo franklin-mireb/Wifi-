@@ -9,5 +9,27 @@
     "user_mac": null,
     "user_device": null,
     "payment_reference": "PAY_20250813_170018_FE0E25ED"
+  },
+  "NK7M-TY6J-QC8L": {
+    "code": "NK7M-TY6J-QC8L",
+    "plan_id": "monthly",
+    "created_at": "2025-08-14T08:45:25.230123",
+    "expires_at": "2025-09-13T08:45:25.230123",
+    "is_used": false,
+    "used_at": null,
+    "user_mac": null,
+    "user_device": null,
+    "payment_reference": null
+  },
+  "FF96-4FRJ-47YH": {
+    "code": "FF96-4FRJ-47YH",
+    "plan_id": "monthly",
+    "created_at": "2025-08-14T08:47:59.131688",
+    "expires_at": "2025-09-13T08:47:59.131688",
+    "is_used": false,
+    "used_at": null,
+    "user_mac": null,
+    "user_device": null,
+    "payment_reference": null
   }
 }

@@ -7,14 +7,24 @@ import re
 import os
 from security import SecurityLogger, RouterSecurity, RateLimiter
 from voucher_system import VoucherManager, PaymentSimulator
+from kuwfi_manager import KUWFIManager
+from config import Config
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
 
-# Initialiser les composants de sécurité et vouchers
+# Configuration du routeur KUWFI depuis les variables d'environnement
+ROUTER_IP = os.environ.get('ROUTER_IP', '192.168.1.254')
+ROUTER_USER = os.environ.get('ROUTER_USER', 'admin') 
+ROUTER_PASS = os.environ.get('ROUTER_PASS', 'admin')
+WIFI_SSID = os.environ.get('WIFI_SSID', 'mireb wifi')
+WIFI_PASSWORD = os.environ.get('WIFI_PASSWORD', '0816448961')
+
+# Initialiser les composants
 security_logger = SecurityLogger()
 rate_limiter = RateLimiter()
 voucher_manager = VoucherManager()
+kuwfi_manager = KUWFIManager(ROUTER_IP, ROUTER_USER, ROUTER_PASS)
 
 class RouterManager:
     def __init__(self):
@@ -473,6 +483,97 @@ def list_vouchers():
         })
     
     return jsonify({'success': True, 'vouchers': formatted_vouchers})
+
+# ============================================================================
+# ROUTES KUWFI ROUTER MANAGEMENT
+# ============================================================================
+
+@app.route('/api/router/status')
+def router_status():
+    """Statut du routeur KUWFI"""
+    try:
+        status = kuwfi_manager.get_router_status()
+        return jsonify({'success': True, 'status': status})
+    except Exception as e:
+        security_logger.log_error(f"Erreur statut routeur: {e}", request.remote_addr)
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/router/devices')
+def connected_devices():
+    """Liste des appareils connectés au routeur"""
+    try:
+        devices = kuwfi_manager.get_connected_devices()
+        return jsonify({'success': True, 'devices': devices, 'count': len(devices)})
+    except Exception as e:
+        security_logger.log_error(f"Erreur récupération devices: {e}", request.remote_addr)
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/router/block', methods=['POST'])
+def block_device():
+    """Bloque un appareil"""
+    try:
+        data = request.get_json()
+        mac_address = data.get('mac_address')
+        
+        if not mac_address:
+            return jsonify({'success': False, 'error': 'Adresse MAC requise'})
+        
+        success = kuwfi_manager.block_device(mac_address)
+        
+        if success:
+            security_logger.log_info(f"Device bloqué: {mac_address}", request.remote_addr)
+            return jsonify({'success': True, 'message': f'Appareil {mac_address} bloqué'})
+        else:
+            return jsonify({'success': False, 'error': 'Échec du blocage'})
+            
+    except Exception as e:
+        security_logger.log_error(f"Erreur blocage device: {e}", request.remote_addr)
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/router/unblock', methods=['POST'])
+def unblock_device():
+    """Débloque un appareil"""
+    try:
+        data = request.get_json()
+        mac_address = data.get('mac_address')
+        
+        if not mac_address:
+            return jsonify({'success': False, 'error': 'Adresse MAC requise'})
+        
+        success = kuwfi_manager.unblock_device(mac_address)
+        
+        if success:
+            security_logger.log_info(f"Device débloqué: {mac_address}", request.remote_addr)
+            return jsonify({'success': True, 'message': f'Appareil {mac_address} débloqué'})
+        else:
+            return jsonify({'success': False, 'error': 'Échec du déblocage'})
+            
+    except Exception as e:
+        security_logger.log_error(f"Erreur déblocage device: {e}", request.remote_addr)
+        return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/api/router/config')
+def router_config():
+    """Configuration actuelle du routeur"""
+    return jsonify({
+        'success': True,
+        'config': {
+            'router_ip': ROUTER_IP,
+            'router_model': 'KUWFI Access Point',
+            'wifi_ssid': WIFI_SSID,
+            'network_info': {
+                'subnet': '192.168.1.0/24',
+                'gateway': '192.168.1.254',
+                'dns': '192.168.1.254'
+            },
+            'management_features': [
+                'Device blocking/unblocking',
+                'Connected devices list',
+                'Voucher integration',
+                'Real-time monitoring'
+            ]
+        }
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -8,6 +8,18 @@ class Config:
     DEBUG = False
     HOST = '0.0.0.0'
     PORT = 5000
+    
+    # Configuration routeur KUWFI
+    ROUTER_IP = os.environ.get('ROUTER_IP', '192.168.1.254')  # Passerelle détectée
+    ROUTER_USER = os.environ.get('ROUTER_USER', 'admin')
+    ROUTER_PASS = os.environ.get('ROUTER_PASS', 'admin')
+    WIFI_SSID = os.environ.get('WIFI_SSID', 'mireb wifi')
+    WIFI_PASSWORD = os.environ.get('WIFI_PASSWORD', '0816448961')
+    
+    # Réseau détecté
+    NETWORK_SUBNET = '192.168.1.0/24'
+    GATEWAY = '192.168.1.254'
+    DNS_SERVER = '192.168.1.254'
 
 class DevelopmentConfig(Config):
     """Configuration pour le développement"""

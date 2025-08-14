@@ -183,6 +183,47 @@
                     </form>
                 </div>
 
+                <!-- Informations KUWFI Router -->
+                <div id="kuwfiInfo" class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-router"></i> 
+                            Routeur KUWFI - Informations
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Configuration Réseau</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>SSID WiFi:</strong> <span class="text-success">mireb wifi</span></li>
+                                    <li><strong>Passerelle:</strong> <span class="text-info">192.168.1.254</span></li>
+                                    <li><strong>Subnet:</strong> 192.168.1.0/24</li>
+                                    <li><strong>DNS:</strong> 192.168.1.254</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-primary">Spécifications</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Modèle:</strong> KUWFI Access Point</li>
+                                    <li><strong>Portée:</strong> 300-500M</li>
+                                    <li><strong>Vitesse:</strong> 2000Mbps Dual Band</li>
+                                    <li><strong>Port:</strong> Gigabit Auto</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <button class="btn btn-primary btn-sm" onclick="checkRouterStatus()">
+                                <i class="fas fa-sync"></i> Vérifier Statut
+                            </button>
+                            <button class="btn btn-success btn-sm ms-2" onclick="loadConnectedDevices()">
+                                <i class="fas fa-devices"></i> Appareils Connectés
+                            </button>
+                            <span id="routerStatusBadge" class="badge bg-secondary ms-2">Status: Vérification...</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Informations de connexion -->
                 <div id="routerInfo" class="router-info" style="display: none;">
                     <div class="row align-items-center">
@@ -556,6 +597,197 @@
                 showAlert('Erreur: ' + error.message, 'error');
             });
         }
+        
+        // ========================================
+        // KUWFI Router Management Functions
+        // ========================================
+        
+        function checkRouterStatus() {
+            const statusBadge = document.getElementById('routerStatusBadge');
+            statusBadge.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification...';
+            statusBadge.className = 'badge bg-warning ms-2';
+            
+            fetch('/api/router/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const status = data.status;
+                        if (status.status === 'online') {
+                            statusBadge.innerHTML = `<i class="fas fa-check-circle"></i> En ligne - ${status.connected_devices} appareils`;
+                            statusBadge.className = 'badge bg-success ms-2';
+                        } else {
+                            statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Hors ligne';
+                            statusBadge.className = 'badge bg-danger ms-2';
+                        }
+                    } else {
+                        statusBadge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Erreur';
+                        statusBadge.className = 'badge bg-danger ms-2';
+                    }
+                })
+                .catch(error => {
+                    statusBadge.innerHTML = '<i class="fas fa-times"></i> Erreur connexion';
+                    statusBadge.className = 'badge bg-danger ms-2';
+                });
+        }
+        
+        function loadConnectedDevices() {
+            document.getElementById('loadingText').textContent = 'Chargement des appareils connectés...';
+            loadingModal.show();
+            
+            fetch('/api/router/devices')
+                .then(response => response.json())
+                .then(data => {
+                    loadingModal.hide();
+                    
+                    if (data.success) {
+                        displayKuwfiDevices(data.devices);
+                        showAlert(`${data.count} appareils trouvés sur le réseau KUWFI`, 'success');
+                    } else {
+                        showAlert('Erreur lors de la récupération des appareils: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    loadingModal.hide();
+                    showAlert('Erreur: ' + error.message, 'error');
+                });
+        }
+        
+        function displayKuwfiDevices(devices) {
+            const usersTableBody = document.getElementById('usersTableBody');
+            usersTableBody.innerHTML = '';
+            
+            if (devices.length === 0) {
+                usersTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            <i class="fas fa-wifi"></i> Aucun appareil détecté sur le réseau KUWFI
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            devices.forEach(device => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-${getDeviceIcon(device.device_type)} me-2 text-primary"></i>
+                            <div>
+                                <strong>${device.hostname || 'Appareil Inconnu'}</strong>
+                                <br>
+                                <small class="text-muted">${device.device_type}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <code>${device.mac}</code>
+                    </td>
+                    <td>
+                        <span class="badge bg-info">${device.ip || 'N/A'}</span>
+                    </td>
+                    <td>
+                        <span class="badge bg-success">
+                            <i class="fas fa-wifi"></i> Connecté
+                        </span>
+                        <br>
+                        <small class="text-muted">${device.connection_type || 'WiFi'}</small>
+                    </td>
+                    <td>
+                        <small class="text-muted">${device.connection_time || 'Maintenant'}</small>
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm">
+                            <button class="btn btn-danger" onclick="blockKuwfiDevice('${device.mac}')">
+                                <i class="fas fa-ban"></i> Bloquer
+                            </button>
+                            <button class="btn btn-success" onclick="unblockKuwfiDevice('${device.mac}')">
+                                <i class="fas fa-check"></i> Autoriser
+                            </button>
+                        </div>
+                    </td>
+                `;
+                usersTableBody.appendChild(row);
+            });
+            
+            // Afficher le tableau
+            document.getElementById('usersSection').style.display = 'block';
+        }
+        
+        function getDeviceIcon(deviceType) {
+            if (deviceType.toLowerCase().includes('iphone') || deviceType.toLowerCase().includes('apple')) {
+                return 'mobile-alt';
+            } else if (deviceType.toLowerCase().includes('samsung') || deviceType.toLowerCase().includes('android')) {
+                return 'mobile-alt';
+            } else if (deviceType.toLowerCase().includes('laptop') || deviceType.toLowerCase().includes('computer')) {
+                return 'laptop';
+            } else if (deviceType.toLowerCase().includes('tablet')) {
+                return 'tablet-alt';
+            } else {
+                return 'question-circle';
+            }
+        }
+        
+        function blockKuwfiDevice(macAddress) {
+            document.getElementById('loadingText').textContent = 'Blocage de l\'appareil...';
+            loadingModal.show();
+            
+            fetch('/api/router/block', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({mac_address: macAddress})
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingModal.hide();
+                
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    loadConnectedDevices(); // Recharger la liste
+                } else {
+                    showAlert('Erreur de blocage: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                loadingModal.hide();
+                showAlert('Erreur: ' + error.message, 'error');
+            });
+        }
+        
+        function unblockKuwfiDevice(macAddress) {
+            document.getElementById('loadingText').textContent = 'Déblocage de l\'appareil...';
+            loadingModal.show();
+            
+            fetch('/api/router/unblock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({mac_address: macAddress})
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingModal.hide();
+                
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    loadConnectedDevices(); // Recharger la liste
+                } else {
+                    showAlert('Erreur de déblocage: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                loadingModal.hide();
+                showAlert('Erreur: ' + error.message, 'error');
+            });
+        }
+        
+        // Vérifier le statut du routeur au chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            checkRouterStatus();
+        });
         
         function disconnect() {
             fetch('/disconnect')

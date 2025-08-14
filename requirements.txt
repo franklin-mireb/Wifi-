@@ -1,4 +1,4 @@
-# 🚀 WiFi Manager - Dépendances Production
+# 🚀 WiFi Manager KUWFI - Dépendances Production
 # Version optimisée pour Render/Heroku/Vercel
 
 # Framework web
@@ -14,7 +14,7 @@ MarkupSafe==3.0.2
 itsdangerous==2.2.0
 click==8.2.1
 
-# HTTP et requests
+# HTTP et requests pour KUWFI router management
 requests==2.31.0
 urllib3==2.5.0
 certifi==2025.7.9
@@ -27,11 +27,14 @@ python-dotenv==1.0.0
 # Sécurité et hashage
 blinker==1.9.0
 
-# JSON et validation
+# JSON et validation pour voucher system
 jsonschema==4.24.0
 
-# Date et temps
+# Date et temps pour voucher expiration
 python-dateutil==2.9.0.post0
 
 # Variables d'environnement et configuration
 PyYAML==6.0.2
+
+# XML parsing pour router data
+lxml==5.3.0
