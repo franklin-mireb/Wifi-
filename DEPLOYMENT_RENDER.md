@@ -126,8 +126,55 @@ Le système détectera automatiquement si une base de données est disponible.
 
 **1. Build échoue :**
 ```bash
-# Vérifier requirements.txt
-pip freeze > requirements.txt
+# Déploiement Render WiFi Manager
+
+## Configuration Render
+
+### 1. Préparation du Repository
+```bash
+# Requirements optimisés pour Render (DÉJÀ FAIT)
+# Fichiers optimisés: requirements.txt, app_render.py, Procfile
+```
+
+### 2. Configuration Render Auto-Deploy
+- ✅ Repository connecté: https://github.com/franklin-mireb/Wifi-
+- ✅ Service Type: Web Service
+- ✅ Build Command: `pip install -r requirements.txt`
+- ✅ Start Command: `python app_render.py` (via Procfile)
+- ✅ Auto-deploy activé depuis main branch
+
+### 3. Variables d'environnement
+```
+FLASK_ENV=production
+PORT=10000 (auto-détecté)
+HOST=0.0.0.0 (auto-configuré)
+```
+
+## Structure des fichiers optimisés
+- ✅ `app_render.py` : Point d'entrée simplifié pour Render
+- ✅ `Procfile` : `web: python app_render.py`
+- ✅ `requirements.txt` : 15 dépendances essentielles (optimisé)
+- ✅ `render.yaml` : Configuration automatique
+
+## Corrections apportées (Status 127 Fix)
+1. **Point d'entrée simplifié** : `app_render.py` au lieu de `run_render.py`
+2. **Procfile corrigé** : Référence directe à `app_render.py`
+3. **Dépendances allégées** : Suppression de PyTorch, Jupyter, etc.
+4. **Configuration robuste** : Variables d'environnement Render natives
+
+## Monitoring et Debug
+```bash
+# Script de test automatique
+./monitor_render.sh
+
+# Test manuel de l'URL Render
+curl -I https://your-service.onrender.com
+```
+
+## Status du déploiement
+- 🔄 **En cours** : Redéploiement automatique après fix
+- 🎯 **Objectif** : Résolution de l'erreur status 127
+- ✅ **Testé** : Fonctionnement local validé
 ```
 
 **2. App ne démarre pas :**
