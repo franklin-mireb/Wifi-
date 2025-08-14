@@ -1,95 +1,68 @@
 #!/bin/bash
+# 🚀 Script de déploiement automatique Render
+# ID Serveur: srv-d2enims9c44c73960iag
 
-# 🚀 Script de déploiement Render automatique
+echo "🎯 Déploiement automatique WiFi Manager sur Render..."
+echo "� Serveur ID: srv-d2enims9c44c73960iag"
+echo "⏰ $(date)"
 
-echo "🌐 Préparation du déploiement Render..."
+# Vérifications pré-déploiement
+echo "🔍 Vérification des fichiers critiques..."
 
-# Vérifier que nous sommes dans le bon répertoire
-if [ ! -f "app.py" ]; then
-    echo "❌ Erreur: app.py non trouvé. Assurez-vous d'être dans le répertoire Wifi-"
-    exit 1
-fi
-
-# Créer/mettre à jour requirements.txt
-echo "📦 Mise à jour des dépendances..."
-pip freeze > requirements.txt
-
-# Vérifier les fichiers requis pour Render
-echo "🔍 Vérification des fichiers Render..."
-
-if [ ! -f "render.yaml" ]; then
-    echo "❌ render.yaml manquant"
+if [ ! -f "Procfile" ]; then
+    echo "❌ Procfile manquant!"
     exit 1
 fi
 
 if [ ! -f "requirements.txt" ]; then
-    echo "❌ requirements.txt manquant"
+    echo "❌ requirements.txt manquant!"
     exit 1
 fi
 
-# Ajouter un Procfile pour compatibilité
-echo "📝 Création du Procfile..."
-echo "web: python run.py --env production --host 0.0.0.0 --port \$PORT" > Procfile
+if [ ! -f "wsgi.py" ]; then
+    echo "❌ wsgi.py manquant!"
+    exit 1
+fi
 
-# Mettre à jour run.py pour Render
-echo "🔧 Optimisation pour Render..."
-cat > run_render.py << 'EOF'
-#!/usr/bin/env python3
-"""
-Point d'entrée optimisé pour Render
-"""
-import os
-import sys
+echo "✅ Tous les fichiers critiques présents"
 
-# Configuration pour Render
-os.environ.setdefault('FLASK_ENV', 'production')
-os.environ.setdefault('HOST', '0.0.0.0')
-os.environ.setdefault('PORT', '10000')
+# Test de l'application WSGI
+echo "🧪 Test du module WSGI..."
+python -c "from wsgi import application; print('✅ WSGI OK')" || {
+    echo "❌ Erreur WSGI!"
+    exit 1
+}
 
-# Importer l'application
-from app import app
+# Vérification des dépendances
+echo "📦 Vérification des dépendances..."
+pip install -q -r requirements.txt || {
+    echo "❌ Erreur installation dépendances!"
+    exit 1
+}
 
-if __name__ == "__main__":
-    port = int(os.environ.get('PORT', 10000))
-    host = os.environ.get('HOST', '0.0.0.0')
-    debug = os.environ.get('FLASK_ENV') != 'production'
-    
-    print(f"🚀 Starting WiFi Manager on {host}:{port}")
-    print(f"🔧 Environment: {os.environ.get('FLASK_ENV', 'development')}")
-    
-    app.run(
-        host=host,
-        port=port,
-        debug=debug
-    )
-EOF
+echo "✅ Dépendances installées"
 
-# Commit et push vers GitHub
-echo "📤 Push vers GitHub..."
-git add .
-git commit -m "🌐 Configuration Render - Déploiement automatique
-
-✨ Ajouts pour Render:
-- 📋 render.yaml - Configuration Render complète
-- 📚 DEPLOYMENT_RENDER.md - Guide déploiement
-- 📦 requirements.txt mis à jour
-- 🚀 Procfile pour démarrage
-- 🔧 run_render.py optimisé
-
-🎯 Prêt pour déploiement 1-click sur Render!"
-
+# Push final vers GitHub (requis pour Render)
+echo "📤 Push final vers GitHub..."
+git add -A
+git commit -m "🚀 Auto-deploy to Render srv-d2enims9c44c73960iag - $(date)"
 git push origin main
 
 echo ""
-echo "✅ Préparation terminée!"
+echo "🎉 DÉPLOIEMENT PRÊT!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "� Serveur Render: srv-d2enims9c44c73960iag"
+echo "� GitHub: https://github.com/franklin-mireb/Wifi-"
+echo "⚙️  Configuration: render.yaml + Procfile"
+echo "🎯 Status: Prêt pour déploiement automatique"
 echo ""
-echo "🎯 PROCHAINES ÉTAPES:"
-echo "1. 🌐 Aller sur: https://render.com/"
-echo "2. 📦 Connecter GitHub et sélectionner: franklin-mireb/Wifi-"
-echo "3. ⚙️ Render détectera automatiquement render.yaml"
-echo "4. 🚀 Cliquer 'Create Web Service'"
+echo "🚀 PROCHAINES ÉTAPES:"
+echo "1. Connectez votre repo GitHub à Render"
+echo "2. Render détectera automatiquement render.yaml"
+echo "3. Le déploiement démarrera avec Procfile corrigé"
 echo ""
-echo "📍 Ou utiliser le deploy button:"
-echo "👉 https://render.com/deploy?repo=https://github.com/franklin-mireb/Wifi-"
+echo "� Ou utilisez l'API Render directement:"
+echo "   curl -X POST https://api.render.com/v1/services/srv-d2enims9c44c73960iag/deploys"
 echo ""
-echo "🎉 Votre WiFi Manager sera en ligne en 2-3 minutes!"
+echo "😴 Reposez-vous, le déploiement est configuré!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
