@@ -1,8 +1,9 @@
-# Configuration Gunicorn pour production LWS
+# Configuration Gunicorn pour production Cloud (Render/Heroku)
 import multiprocessing
+import os
 
-# Liaison réseau
-bind = "127.0.0.1:5000"
+# Liaison réseau (Render utilise $PORT)
+bind = f"0.0.0.0:{os.environ.get('PORT', 5000)}"
 
 # Workers
 workers = multiprocessing.cpu_count() * 2 + 1
@@ -19,9 +20,9 @@ max_requests = 1000
 max_requests_jitter = 100
 preload_app = True
 
-# Logging
-accesslog = "/home/wifimanager/logs/access.log"
-errorlog = "/home/wifimanager/logs/error.log"
+# Logging (logs vers stdout/stderr pour Render)
+accesslog = "-"
+errorlog = "-"
 loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 

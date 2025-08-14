@@ -5,6 +5,9 @@
 Flask==2.3.3
 Werkzeug==2.3.7
 
+# Serveur WSGI pour production
+gunicorn==21.2.0
+
 # Utilitaires Flask
 Jinja2==3.1.6
 MarkupSafe==3.0.2
