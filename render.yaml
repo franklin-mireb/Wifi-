@@ -1,14 +1,13 @@
 # 🚀 Configuration Render pour WiFi Manager
-version: 2
-
 services:
   # 🐍 Application principale WiFi Manager
   - type: web
     name: wifi-manager
     env: python
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: python run.py --env production --host 0.0.0.0 --port $PORT
+    region: oregon
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: python run_render.py
     envVars:
       - key: FLASK_ENV
         value: production
@@ -22,13 +21,5 @@ services:
         value: changeme
       - key: PAYMENT_MODE
         value: demo
-    
-  # 🗄️ Base de données PostgreSQL (optionnel)
-  - type: pserv
-    name: wifi-manager-db
-    plan: free
-    env: postgres
-    
-databases:
-  - name: wifi-manager-postgres
-    plan: free
+      - key: PYTHON_VERSION
+        value: 3.12.0
