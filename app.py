@@ -24,7 +24,10 @@ WIFI_PASSWORD = os.environ.get('WIFI_PASSWORD', '0816448961')
 security_logger = SecurityLogger()
 rate_limiter = RateLimiter()
 voucher_manager = VoucherManager()
-kuwfi_manager = KUWFIManager(ROUTER_IP, ROUTER_USER, ROUTER_PASS)
+
+# Mode simulation pour la demo quand pas connecté au routeur physique
+SIMULATION_MODE = os.environ.get('SIMULATION_MODE', 'true').lower() == 'true'
+kuwfi_manager = KUWFIManager(ROUTER_IP, ROUTER_USER, ROUTER_PASS, simulation_mode=SIMULATION_MODE)
 
 class RouterManager:
     def __init__(self):
@@ -561,6 +564,7 @@ def router_config():
             'router_ip': ROUTER_IP,
             'router_model': 'KUWFI Access Point',
             'wifi_ssid': WIFI_SSID,
+            'simulation_mode': SIMULATION_MODE,
             'network_info': {
                 'subnet': '192.168.1.0/24',
                 'gateway': '192.168.1.254',
@@ -574,6 +578,29 @@ def router_config():
             ]
         }
     })
+
+@app.route('/api/router/toggle-simulation', methods=['POST'])
+def toggle_simulation():
+    """Basculer entre mode simulation et mode réel"""
+    global kuwfi_manager, SIMULATION_MODE
+    
+    try:
+        data = request.get_json()
+        new_mode = data.get('simulation_mode', True)
+        
+        # Recréer le gestionnaire avec le nouveau mode
+        kuwfi_manager = KUWFIManager(ROUTER_IP, ROUTER_USER, ROUTER_PASS, simulation_mode=new_mode)
+        SIMULATION_MODE = new_mode
+        
+        mode_text = "simulation" if new_mode else "réel"
+        return jsonify({
+            'success': True, 
+            'message': f'Mode {mode_text} activé',
+            'simulation_mode': new_mode
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

@@ -219,6 +219,9 @@
                             <button class="btn btn-success btn-sm ms-2" onclick="loadConnectedDevices()">
                                 <i class="fas fa-devices"></i> Appareils Connectés
                             </button>
+                            <button class="btn btn-info btn-sm ms-2" onclick="toggleSimulationMode()">
+                                <i class="fas fa-toggle-on"></i> Mode: <span id="currentMode">Simulation</span>
+                            </button>
                             <span id="routerStatusBadge" class="badge bg-secondary ms-2">Status: Vérification...</span>
                         </div>
                     </div>
@@ -784,10 +787,62 @@
             });
         }
         
+        function toggleSimulationMode() {
+            const currentModeSpan = document.getElementById('currentMode');
+            const isSimulation = currentModeSpan.textContent === 'Simulation';
+            const newMode = !isSimulation;
+            
+            document.getElementById('loadingText').textContent = 'Changement de mode...';
+            loadingModal.show();
+            
+            fetch('/api/router/toggle-simulation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({simulation_mode: newMode})
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingModal.hide();
+                
+                if (data.success) {
+                    currentModeSpan.textContent = data.simulation_mode ? 'Simulation' : 'Réel';
+                    const icon = document.querySelector('#currentMode').previousElementSibling;
+                    icon.className = data.simulation_mode ? 'fas fa-toggle-on' : 'fas fa-toggle-off';
+                    
+                    showAlert(data.message, 'success');
+                    
+                    // Recharger les appareils avec le nouveau mode
+                    if (document.getElementById('usersSection').style.display !== 'none') {
+                        loadConnectedDevices();
+                    }
+                } else {
+                    showAlert('Erreur changement mode: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                loadingModal.hide();
+                showAlert('Erreur: ' + error.message, 'error');
+            });
+        }
+        
         // Vérifier le statut du routeur au chargement
         document.addEventListener('DOMContentLoaded', function() {
             checkRouterStatus();
+            
+            // Charger la configuration actuelle
+            fetch('/api/router/config')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.config.simulation_mode !== undefined) {
+                        const currentModeSpan = document.getElementById('currentMode');
+                        currentModeSpan.textContent = data.config.simulation_mode ? 'Simulation' : 'Réel';
+                    }
+                })
+                .catch(error => console.log('Info config non disponible'));
         });
+        
         
         function disconnect() {
             fetch('/disconnect')
