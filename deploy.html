@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Déployer WiFi Manager sur Render</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 600px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+        .server-id {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 1.2em;
+            color: #6f42c1;
+            font-weight: bold;
+        }
+        .deploy-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 20px 40px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .deploy-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+            text-decoration: none;
+            color: white;
+        }
+        .status {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .features {
+            text-align: left;
+            margin: 20px 0;
+        }
+        .features li {
+            margin: 10px 0;
+            padding: 5px 0;
+        }
+        .emoji {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 WiFi Manager Ready!</h1>
+        
+        <div class="server-id">
+            <span class="emoji">📍</span> Serveur ID: srv-d2enims9c44c73960iag
+        </div>
+        
+        <div class="status">
+            <strong>✅ Statut:</strong> Tous les fichiers sont configurés et prêts pour le déploiement!
+        </div>
+        
+        <h3>🎯 Votre Application Inclut:</h3>
+        <ul class="features">
+            <li><span class="emoji">💳</span> <strong>Système de vouchers:</strong> 7$/mois et 0.6$/jour</li>
+            <li><span class="emoji">🔒</span> <strong>Sécurité intégrée</strong> avec codes uniques</li>
+            <li><span class="emoji">🎨</span> <strong>Interface moderne</strong> Bootstrap 5</li>
+            <li><span class="emoji">📡</span> <strong>Gestion WiFi complète</strong></li>
+            <li><span class="emoji">🗄️</span> <strong>Base de données PostgreSQL</strong></li>
+        </ul>
+        
+        <a href="https://render.com/deploy?repo=https://github.com/franklin-mireb/Wifi-" 
+           class="deploy-btn">
+            🚀 DÉPLOYER MAINTENANT
+        </a>
+        
+        <p style="color: #6c757d; margin-top: 30px;">
+            <em>Déploiement automatique en 2-3 minutes ⏱️</em><br>
+            <small>Render détectera automatiquement la configuration</small>
+        </p>
+        
+        <div style="margin-top: 30px; padding: 20px; background: #f8f9fa; border-radius: 10px;">
+            <h4>😴 Repos Mérité!</h4>
+            <p>Tout est automatisé. Cliquez sur le bouton et laissez Render faire le travail!</p>
+        </div>
+    </div>
+</body>
+</html>
